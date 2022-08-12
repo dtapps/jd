@@ -1,12 +1,13 @@
 package jd
 
 import (
+	"context"
 	"go.dtapp.net/gorequest"
 	"go.dtapp.net/gostring"
 )
 
 // 请求接口
-func (c *Client) request(params map[string]interface{}) (gorequest.Response, error) {
+func (c *Client) request(ctx context.Context, params map[string]interface{}) (gorequest.Response, error) {
 
 	// 签名
 	c.Sign(params)
@@ -28,7 +29,7 @@ func (c *Client) request(params map[string]interface{}) (gorequest.Response, err
 
 	// 日志
 	if c.config.PgsqlDb != nil {
-		go c.log.GormMiddlewareCustom(gostring.ToString(params["method"]), request, Version)
+		go c.log.GormMiddlewareCustom(ctx, gostring.ToString(params["method"]), request, Version)
 	}
 	if c.config.MongoDb != nil {
 		go c.log.MongoMiddlewareCustom(gostring.ToString(params["method"]), request)
