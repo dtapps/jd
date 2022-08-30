@@ -6,40 +6,79 @@ import (
 	"go.dtapp.net/gorequest"
 )
 
-type ConfigClient struct {
-	AppKey     string           // 应用Key
-	SecretKey  string           // 密钥
-	SiteId     string           // 网站ID/APP ID
-	PositionId string           // 推广位id
-	GormClient *dorm.GormClient // 日志数据库
-	LogClient  *golog.ZapLog    // 日志驱动
-	LogDebug   bool             // 日志开关
+// client *dorm.GormClient
+type gormClientFun func() *dorm.GormClient
+
+// client *dorm.MongoClient
+// databaseName string
+type mongoClientFun func() (*dorm.MongoClient, string)
+
+// ClientConfig 实例配置
+type ClientConfig struct {
+	AppKey         string         // 应用Key
+	SecretKey      string         // 密钥
+	SiteId         string         // 网站ID/APP ID
+	PositionId     string         // 推广位id
+	GormClientFun  gormClientFun  // 日志配置
+	MongoClientFun mongoClientFun // 日志配置
+	Debug          bool           // 日志开关
 }
 
+// Client 实例
 type Client struct {
-	requestClient *gorequest.App   // 请求服务
-	logClient     *golog.ApiClient // 日志服务
-	config        *ConfigClient    // 配置
+	requestClient *gorequest.App // 请求服务
+	config        struct {
+		appKey     string // 应用Key
+		secretKey  string // 密钥
+		siteId     string // 网站ID/APP ID
+		positionId string // 推广位id
+	}
+	log struct {
+		gorm           bool              // 日志开关
+		gormClient     *dorm.GormClient  // 日志数据库
+		logGormClient  *golog.ApiClient  // 日志服务
+		mongo          bool              // 日志开关
+		mongoClient    *dorm.MongoClient // 日志数据库
+		logMongoClient *golog.ApiClient  // 日志服务
+	}
 }
 
-func NewClient(config *ConfigClient) (*Client, error) {
+// NewClient 创建实例化
+func NewClient(config *ClientConfig) (*Client, error) {
 
 	var err error
-	c := &Client{config: config}
+	c := &Client{}
+
+	c.config.appKey = config.AppKey
+	c.config.secretKey = config.SecretKey
+	c.config.siteId = config.SiteId
+	c.config.positionId = config.PositionId
 
 	c.requestClient = gorequest.NewHttp()
 	c.requestClient.Uri = apiUrl
 
-	if c.config.GormClient.Db != nil {
-		c.logClient, err = golog.NewApiClient(&golog.ApiClientConfig{
-			GormClient: c.config.GormClient,
-			TableName:  logTable,
-			LogClient:  c.config.LogClient,
-			LogDebug:   c.config.LogDebug,
-		})
+	gormClient := config.GormClientFun()
+	if gormClient != nil && gormClient.Db != nil {
+		c.log.logGormClient, err = golog.NewApiGormClient(func() (*dorm.GormClient, string) {
+			return gormClient, logTable
+		}, config.Debug)
 		if err != nil {
 			return nil, err
 		}
+		c.log.gorm = true
+		c.log.gormClient = gormClient
+	}
+
+	mongoClient, databaseName := config.MongoClientFun()
+	if mongoClient != nil && mongoClient.Db != nil {
+		c.log.logMongoClient, err = golog.NewApiMongoClient(func() (*dorm.MongoClient, string, string) {
+			return mongoClient, databaseName, logTable
+		}, config.Debug)
+		if err != nil {
+			return nil, err
+		}
+		c.log.mongo = true
+		c.log.mongoClient = mongoClient
 	}
 
 	return c, nil
