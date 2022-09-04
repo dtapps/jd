@@ -1,11 +1,7 @@
 package jd
 
 const (
-	apiUrl = "https://api.jd.com/routerjson"
-)
-
-const (
+	apiUrl   = "https://api.jd.com/routerjson"
 	logTable = "jd"
+	Version  = "1.0.7"
 )
-
-const Version = "1.0.6"
