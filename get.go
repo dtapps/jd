@@ -1,5 +1,7 @@
 package jd
 
+import "go.dtapp.net/golog"
+
 // GetAppKey 应用Key
 func (c *Client) GetAppKey() string {
 	return c.config.appKey
@@ -18,4 +20,12 @@ func (c *Client) GetSiteId() string {
 // GetPositionId 推广位id
 func (c *Client) GetPositionId() string {
 	return c.config.positionId
+}
+
+func (c *Client) GetLogGorm() *golog.ApiClient {
+	return c.log.logGormClient
+}
+
+func (c *Client) GetLogMongo() *golog.ApiClient {
+	return c.log.logMongoClient
 }
