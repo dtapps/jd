@@ -2,8 +2,8 @@ package jd
 
 import (
 	"context"
+	"fmt"
 	"go.dtapp.net/gorequest"
-	"go.dtapp.net/gostring"
 )
 
 // 请求接口
@@ -29,7 +29,7 @@ func (c *Client) request(ctx context.Context, params map[string]interface{}) (go
 
 	// 记录日志
 	if c.log.status {
-		go c.log.client.MiddlewareCustom(ctx, gostring.ToString(params["method"]), request, Version)
+		go c.log.client.MiddlewareCustom(ctx, fmt.Sprintf("%s", params["method"]), request, Version)
 	}
 
 	return request, err
