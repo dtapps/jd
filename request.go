@@ -7,19 +7,22 @@ import (
 )
 
 // 请求接口
-func (c *Client) request(ctx context.Context, params map[string]interface{}) (gorequest.Response, error) {
+func (c *Client) request(ctx context.Context, param gorequest.Params) (gorequest.Response, error) {
 
 	// 签名
-	c.Sign(params)
+	c.Sign(param)
 
 	// 创建请求
-	client := c.requestClient
+	client := gorequest.NewHttp()
 
 	// 设置格式
 	client.SetContentTypeForm()
 
+	// 设置用户代理
+	client.SetUserAgent(gorequest.GetRandomUserAgentSystem())
+
 	// 设置参数
-	client.SetParams(params)
+	client.SetParams(param)
 
 	// 发起请求
 	request, err := client.Post(ctx)
@@ -28,8 +31,8 @@ func (c *Client) request(ctx context.Context, params map[string]interface{}) (go
 	}
 
 	// 记录日志
-	if c.log.status {
-		go c.log.client.MiddlewareCustom(ctx, fmt.Sprintf("%s", params["method"]), request, Version)
+	if c.gormLog.status {
+		go c.gormLog.client.MiddlewareCustom(ctx, fmt.Sprintf("%s", param.Get("method")), request)
 	}
 
 	return request, err

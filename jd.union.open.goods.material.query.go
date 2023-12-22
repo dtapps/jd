@@ -2,7 +2,7 @@ package jd
 
 import (
 	"context"
-	"encoding/json"
+	"go.dtapp.net/gojson"
 	"go.dtapp.net/gorequest"
 )
 
@@ -111,24 +111,26 @@ type UnionOpenGoodsMaterialQueryResult struct {
 	Result   UnionOpenGoodsMaterialQueryQueryResult    // 结果
 	Body     []byte                                    // 内容
 	Http     gorequest.Response                        // 请求
-	Err      error                                     // 错误
 }
 
-func newUnionOpenGoodsMaterialQueryResult(responce UnionOpenGoodsMaterialQueryResultResponse, result UnionOpenGoodsMaterialQueryQueryResult, body []byte, http gorequest.Response, err error) *UnionOpenGoodsMaterialQueryResult {
-	return &UnionOpenGoodsMaterialQueryResult{Responce: responce, Result: result, Body: body, Http: http, Err: err}
+func newUnionOpenGoodsMaterialQueryResult(responce UnionOpenGoodsMaterialQueryResultResponse, result UnionOpenGoodsMaterialQueryQueryResult, body []byte, http gorequest.Response) *UnionOpenGoodsMaterialQueryResult {
+	return &UnionOpenGoodsMaterialQueryResult{Responce: responce, Result: result, Body: body, Http: http}
 }
 
 // UnionOpenGoodsMaterialQuery 猜你喜欢商品推荐
 // https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.goods.material.query
-func (c *Client) UnionOpenGoodsMaterialQuery(ctx context.Context, notMustParams ...Params) *UnionOpenGoodsMaterialQueryResult {
+func (c *Client) UnionOpenGoodsMaterialQuery(ctx context.Context, notMustParams ...gorequest.Params) (*UnionOpenGoodsMaterialQueryResult, error) {
 	// 参数
 	params := NewParamsWithType("jd.union.open.goods.material.query", notMustParams...)
 	// 请求
 	request, err := c.request(ctx, params)
+	if err != nil {
+		return newUnionOpenGoodsMaterialQueryResult(UnionOpenGoodsMaterialQueryResultResponse{}, UnionOpenGoodsMaterialQueryQueryResult{}, request.ResponseBody, request), err
+	}
 	// 定义
 	var responce UnionOpenGoodsMaterialQueryResultResponse
 	var result UnionOpenGoodsMaterialQueryQueryResult
-	err = json.Unmarshal(request.ResponseBody, &responce)
-	err = json.Unmarshal([]byte(responce.JdUnionOpenGoodsMaterialQueryResponce.QueryResult), &result)
-	return newUnionOpenGoodsMaterialQueryResult(responce, result, request.ResponseBody, request, err)
+	err = gojson.Unmarshal(request.ResponseBody, &responce)
+	err = gojson.Unmarshal([]byte(responce.JdUnionOpenGoodsMaterialQueryResponce.QueryResult), &result)
+	return newUnionOpenGoodsMaterialQueryResult(responce, result, request.ResponseBody, request), err
 }

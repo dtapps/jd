@@ -6,5 +6,4 @@ const (
 
 const (
 	LogTable = "jd"
-	Version  = "1.0.11"
 )

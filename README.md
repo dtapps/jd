@@ -13,5 +13,5 @@
 #### 安装
 
 ```shell
-go get -v -u go.dtapp.net/jd
+go get -v -u go.dtapp.net/jd@v1.0.12
 ```
